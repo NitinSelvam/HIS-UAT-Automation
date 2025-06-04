@@ -202,12 +202,6 @@ while(True):
 # In[ ]:
 
 
-df.head(30)
-
-
-# In[ ]:
-
-
 html_list = driver.find_element(By.CLASS_NAME, "rcbList")
 items = html_list.find_elements(By.TAG_NAME,"li")
 
@@ -234,10 +228,3 @@ final_doctorslots_availability_df.drop('doctorname_list',axis=1,inplace=True)
 
 
 final_doctorslots_availability_df.to_csv('Doctor Slots Availability-{} HIS UAT.csv'.format(unit),index=False)
-
-
-# In[ ]:
-
-
-final_doctorslots_availability_df.head(20)
-
