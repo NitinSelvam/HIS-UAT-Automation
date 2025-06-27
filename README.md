@@ -20,6 +20,6 @@
 # Important note
 The codefiles in this repository have few excel links that are being referred to (contains details with respect to API and URL port details for UAT and Prod Akhil HIS environments). Below is the link to access the same.
 
-[GitHub Pages](https://drive.google.com/drive/folders/1RfGjX_0ZJXhq8HihwhvgkCSX8tAwMtXq?usp=sharing)
+[HIS Servers - All IP Port details](https://drive.google.com/drive/folders/1RfGjX_0ZJXhq8HihwhvgkCSX8tAwMtXq?usp=sharing)
 
 Once you have recieved access, please download the necessary files from the shared folder, and store in the same directory as this codebase.
