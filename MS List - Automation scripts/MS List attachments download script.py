@@ -17,6 +17,61 @@ import urllib.parse
 import webbrowser
 import requests
 
+def extract_sharepoint_list(driver,required_id):
+
+    list_selector = "div.odspSpartanList[data-is-scrollable='true']"
+    row_selector = "div[data-automationid='list-content']"
+
+    collected_rows = []
+    seen_texts = set()
+
+    last_height = -1
+
+    while True:
+        # Re-find list container (avoid stale element)
+        list_ele = driver.find_element(By.CSS_SELECTOR, list_selector)
+
+        # Get visible rows ONLY
+        visible_rows = list_ele.find_elements(By.CSS_SELECTOR, row_selector)
+
+        for row in visible_rows:
+            try:
+                id_ele_list = row.find_elements(By.CSS_SELECTOR, ".odsp-spartan-cell.field-ID-htmlGrid_1")
+                text_list = [id_ele.text.strip() for id_ele in id_ele_list]
+                # collected_rows+= text_list
+                # collected_rows = list(np.unique(collected_rows))
+            except:
+                pass  # ignore stale rows
+
+        text_list.sort(reverse=True)
+        print(text_list)
+        if required_id in text_list:
+            return text_list
+        # Scroll down
+        driver.execute_script(
+            "arguments[0].scrollTop = arguments[0].scrollHeight;", 
+            list_ele
+        )
+
+        time.sleep(4)  # allow SharePoint to load next batch
+
+        # Detect end-of-list
+        new_height = driver.execute_script(
+            "return arguments[0].scrollHeight;", 
+            list_ele
+        )
+
+        if new_height == last_height:
+            break  # No more items to load
+
+        last_height = new_height
+
+    return collected_rows
+
+def search_iteratively(driver,required_id):
+    rows = extract_sharepoint_list(driver,required_id)
+    return rows.index(required_id)
+
 username = 'Nitin'
 
 credentials_df = pd.read_csv('MS List_credentials.csv')
@@ -85,7 +140,11 @@ for required_id in required_id_list_2:
     
     id_ele_list = driver.find_elements(By.CSS_SELECTOR, ".odsp-spartan-cell.field-ID-htmlGrid_1")
     id_ele_num_list = [id_ele.text for id_ele in id_ele_list]
-    index = id_ele_num_list.index(str(required_id))
+    if str(required_id) in id_ele_num_list:
+        index = id_ele_num_list.index(str(required_id))
+    
+    else:
+        index = search_iteratively(driver,required_id)
     
     reqd_clickable_ele_list = driver.find_elements(By.XPATH,"//span[@data-id='heroField']")
     reqd_clickable_ele = reqd_clickable_ele_list[index]
