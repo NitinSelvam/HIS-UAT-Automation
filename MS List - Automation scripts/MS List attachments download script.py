@@ -218,9 +218,6 @@ for required_id in required_id_list_2:
 
     id_count+=1
     
-print('All comments extraction - Successfully completed')
+print('All attachments downloading - Successfully completed')
 driver.quit()
 print('Browser is successfully quitted...')
-
-#df.to_csv(output_csv_filepath,index=False)
-print('Comments saved successfully to csv file...')
