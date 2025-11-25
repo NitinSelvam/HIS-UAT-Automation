@@ -16,6 +16,7 @@ from dateutil import parser
 import urllib.parse
 import webbrowser
 import requests
+import argparse
 
 def extract_sharepoint_list(driver,required_id):
 
@@ -43,7 +44,7 @@ def extract_sharepoint_list(driver,required_id):
             except:
                 pass  # ignore stale rows
 
-        text_list.sort(reverse=True)
+        #text_list.sort(reverse=True)
         print(text_list)
         if required_id in text_list:
             return text_list
@@ -99,8 +100,25 @@ if confirm_flag.lower() not in ('y','n','yes','no'):
 else:
 	column_name = 'ID'
 	
+parser = argparse.ArgumentParser(prog='MS List comments extracted script')
+parser.add_argument('-i', '--index', type=int, default=-1, help="Starting MS List ID to start running the script")
+
+args = parser.parse_args()
+list_index = args.index
+
 required_id_list = [str(item) for item in list(df[column_name].values)]
 required_id_list = [item for item in required_id_list if item.isdigit()]
+
+max_list_id = max([int(ele) for ele in required_id_list])
+
+if list_index==-1:
+    list_index = max_list_id
+   
+else:
+    required_id_df = df[df[column_name].apply(lambda x: int(x)<=list_index)]
+    required_id_list = [str(item) for item in list(required_id_df[column_name].values)]
+
+print(len(required_id_list))
 
 url = 'https://asterdmhealthcare57888085as.sharepoint.com/sites/AsterVCP-Internal/Lists/Aster Health Issue tracker/AllItems.aspx'
 url = url.replace(' ',"%20")
@@ -138,6 +156,7 @@ for required_id in required_id_list_2:
     searchbox_input_ele.send_keys(Keys.ENTER)
     time.sleep(2)
     
+    print('Searched for MS List ID: {}'.format(required_id))
     id_ele_list = driver.find_elements(By.CSS_SELECTOR, ".odsp-spartan-cell.field-ID-htmlGrid_1")
     id_ele_num_list = [id_ele.text for id_ele in id_ele_list]
     if str(required_id) in id_ele_num_list:
@@ -154,14 +173,20 @@ for required_id in required_id_list_2:
     attachment_ele_list = driver.find_elements(By.XPATH,"//a[@data-automationid='FieldRenderer-url']")
     attachment_url_list = [attachment_ele.get_attribute('href') for attachment_ele in attachment_ele_list]
     
-    attachment_index = 1
+    attachment_index = 0
     
     for attachment_url in attachment_url_list:
-
+        attachment_index+=1
         attachment_url_new = attachment_url.strip('?web=1')
         
         file_extension = os.path.splitext(attachment_url_new)[-1]
-        attachment_path = "{}/MS-List ID {} attachment-{}{}".format(output_attachments_folderpath,required_id,attachment_index,file_extension)
+        
+        folder_path = '{}/MS-List ID {}'.format(output_attachments_folderpath,required_id)
+        
+        if not os.path.isdir(folder_path):
+            os.mkdir(folder_path)
+        
+        attachment_path = "{}/attachment-{}{}".format(folder_path,attachment_index,file_extension)
         
         cookies = driver.get_cookies()
         session = requests.Session()
@@ -177,14 +202,25 @@ for required_id in required_id_list_2:
         with open(attachment_path, 'wb') as f:
             f.write(response.content)
 
-        attachment_index+=1
-
     close_btn_ele = driver.find_element(By.XPATH,"//button[contains(@class, 'ms-Button') and contains(@class, 'ms-Button--commandBar') and contains(@class, 'ms-CommandBarItem-link') and contains(@class, 'sp-itemDialog-closeBtn')]")
     close_btn_ele.click()
 
     go_back_to_home_btn_ele = driver.find_element(By.XPATH,"//button[contains(@class, 'SearchBoxExitButton')]")
     go_back_to_home_btn_ele.click()
 
-    print('Attachments extracted for id count = {}/{}... - MS List ID: {}'.format(id_count,len(required_id_list_2),required_id))
+    if attachment_index==0:
+        print('No Attachments found for id count = {}/{}... - MS List ID: {}'.format(id_count,len(required_id_list_2),required_id))
+        
+    else:
+        print('Attachments extracted for id count = {}/{}... - MS List ID: {}'.format(id_count,len(required_id_list_2),required_id))
+        
+    print('##################################')
 
     id_count+=1
+    
+print('All comments extraction - Successfully completed')
+driver.quit()
+print('Browser is successfully quitted...')
+
+#df.to_csv(output_csv_filepath,index=False)
+print('Comments saved successfully to csv file...')

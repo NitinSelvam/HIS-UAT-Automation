@@ -154,8 +154,10 @@ for required_id in required_id_list:
     searchbox_input_ele.clear()
     searchbox_input_ele.send_keys(str(required_id))
     searchbox_input_ele.send_keys(Keys.ENTER)
-    
     time.sleep(2)
+    
+    print('Searched for MS List ID: {}'.format(required_id))
+    
     empty_placeholder_item_list = driver.find_elements(By.XPATH,"//div[@data-automationid='list-empty-placeholder']")
     
     while empty_placeholder_item_list!=[]:
@@ -214,6 +216,7 @@ for required_id in required_id_list:
     consolidated_comment = consolidated_comment.strip('\n')
 
     print('Final comments extracted for id count = {}/{}... - MS List ID: {}'.format(id_count,len(required_id_list),required_id))
+    print('##################################')
     df = pd.DataFrame({'MS List ID':[required_id],'Comments':[consolidated_comment]})
     # df = pd.concat([df,temp_df])
     df.to_csv(output_csv_filepath,index=False,mode='a',header=False)
